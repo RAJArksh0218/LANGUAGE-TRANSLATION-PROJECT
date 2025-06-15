@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Language Translator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0f2f7 0%, #c1e5f0 100%); /* Softer, dynamic gradient */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1.5rem; /* Add some padding for smaller screens */
+            box-sizing: border-box; /* Include padding in element's total width and height */
+        }
+        .container {
+            max-width: 1000px; /* Slightly wider container */
+            background-color: #ffffff; /* Pure white background for the card */
+            padding: 2.5rem; /* Increased padding */
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1); /* Stronger, softer shadow */
+            border: none; /* Remove explicit border, rely on shadow */
+            transition: transform 0.3s ease-in-out;
+        }
+        .container:hover {
+            transform: translateY(-5px); /* Subtle lift on hover */
+        }
+        h1 {
+            font-family: 'Poppins', sans-serif; /* Use Poppins for heading */
+            color: #2c3e50; /* Darker, more professional heading color */
+            margin-bottom: 2rem; /* More space below heading */
+            font-weight: 700; /* Bolder heading */
+        }
+        textarea {
+            resize: vertical; /* Allow vertical resizing only */
+            min-height: 180px; /* Taller text areas */
+            border: 1px solid #d1d5db; /* Softer border color */
+            border-radius: 0.75rem; /* More rounded corners for textareas */
+            padding: 1rem; /* More padding inside textareas */
+            font-size: 1rem; /* Slightly larger font size */
+            color: #374151; /* Darker text color */
+            background-color: #f9fafb; /* Light background for input textareas */
+            transition: all 0.2s ease-in-out;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #4CAF50; /* Green focus border */
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2); /* Green focus ring */
+        }
+        select {
+            border: 1px solid #d1d5db; /* Softer border color */
+            border-radius: 0.75rem; /* More rounded corners for selects */
+            padding: 0.85rem; /* More padding inside selects */
+            font-size: 1rem;
+            color: #374151;
+            background-color: #f9fafb; /* Light background for selects */
+            appearance: none; /* Remove default arrow */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19.5 8.25-7.5 7.5-7.5-7.5Z' /%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem; /* Make space for custom arrow */
+            transition: all 0.2s ease-in-out;
+        }
+        select:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+        }
+        .gradient-button {
+            background-image: linear-gradient(to right, #4CAF50 0%, #689F38 50%, #388E3C 100%); /* Richer green gradient */
+            color: white;
+            font-weight: 600; /* Slightly less bold than current */
+            padding: 0.9rem 2.5rem; /* Adjusted padding */
+            border-radius: 9999px; /* Fully rounded */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15); /* More prominent shadow */
+            transition: all 0.3s ease-out; /* Smoother transition */
+            letter-spacing: 0.05em; /* A little spacing for button text */
+            font-size: 1.1rem;
+        }
+        .gradient-button:hover {
+            background-position: right center; /* Slide background on hover */
+            transform: translateY(-3px) scale(1.02); /* Slight lift and scale */
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2); /* More intense shadow on hover */
+        }
+        .gradient-button:active {
+            transform: translateY(0);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+        .loader {
+            border: 5px solid #f3f3f3; /* Light grey */
+            border-top: 5px solid #4CAF50; /* Matching green */
+            border-radius: 50%;
+            width: 45px; /* Slightly larger loader */
+            height: 45px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .message-box {
+            position: fixed;
+            top: 25px; /* Slightly lower from top */
+            right: 25px; /* Slightly more from right */
+            background-color: #ffe082; /* Soft yellow for warning */
+            border: 1px solid #ffb300; /* Darker yellow border */
+            border-radius: 0.75rem; /* Rounded corners */
+            padding: 1rem 1.25rem; /* Generous padding */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Soft shadow */
+            z-index: 1000;
+            display: none;
+            font-size: 0.95rem;
+            color: #424242; /* Darker text for readability */
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: slideIn 0.5s forwards;
+        }
+        .message-box.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .message-box.error {
+            background-color: #ffcdd2; /* Soft red for error */
+            border-color: #ef5350; /* Darker red border */
+            color: #b71c1c; /* Dark red text */
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="container mx-auto bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Universal Language Translator</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div>
+                <label for="sourceLanguage" class="block text-gray-700 text-sm font-medium mb-2">Source Language:</label>
+                <select id="sourceLanguage" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent transition duration-200 ease-in-out bg-gray-50"></select>
+                <label for="sourceText" class="block text-gray-700 text-sm font-medium mb-2 mt-5">Enter Text:</label>
+                <textarea id="sourceText" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent transition duration-200 ease-in-out shadow-sm" placeholder="Type or paste your text here..." rows="7"></textarea>
+            </div>
+
+            <div>
+                <label for="targetLanguage" class="block text-gray-700 text-sm font-medium mb-2">Target Language:</label>
+                <select id="targetLanguage" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent transition duration-200 ease-in-out bg-gray-50"></select>
+                <label for="translatedText" class="block text-gray-700 text-sm font-medium mb-2 mt-5">Translated Text:</label>
+                <textarea id="translatedText" class="w-full p-4 border border-gray-300 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition duration-200 ease-in-out shadow-sm" placeholder="Translation will appear here..." rows="7" readonly></textarea>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
+            <button id="translateButton" class="gradient-button text-white font-semibold py-3 px-8 rounded-full shadow-md hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition duration-300 ease-in-out w-full sm:w-auto">
+                Translate
+            </button>
+            <div id="loadingIndicator" class="loader hidden"></div>
+        </div>
+
+        <div id="messageBox" class="message-box">
+            <p id="messageText"></p>
+        </div>
+    </div>
+
+    <script>
+        const languages = [
+            {"code": "auto", "name": "Detect Language"},
+            {"code": "en", "name": "English"},
+            {"code": "es", "name": "Spanish"},
+            {"code": "fr", "name": "French"},
+            {"code": "de", "name": "German"},
+            {"code": "zh", "name": "Chinese (Simplified)"},
+            {"code": "hi", "name": "Hindi"},
+            {"code": "ar", "name": "Arabic"},
+            {"code": "pt", "name": "Portuguese"},
+            {"code": "ru", "name": "Russian"},
+            {"code": "ja", "name": "Japanese"},
+            {"code": "ko", "name": "Korean"},
+            {"code": "it", "name": "Italian"},
+            {"code": "nl", "name": "Dutch"},
+            {"code": "sv", "name": "Swedish"},
+            {"code": "tr", "name": "Turkish"},
+            {"code": "pl", "name": "Polish"},
+            {"code": "uk", "name": "Ukrainian"},
+            {"code": "th", "name": "Thai"},
+            {"code": "vi", "name": "Vietnamese"},
+            {"code": "id", "name": "Indonesian"},
+            {"code": "ms", "name": "Malay"},
+            {"code": "bn", "name": "Bengali"},
+            {"code": "gu", "name": "Gujarati"},
+            {"code": "kn", "name": "Kannada"},
+            {"code": "ml", "name": "Malayalam"},
+            {"code": "mr", "name": "Marathi"},
+            {"code": "pa", "name": "Punjabi"},
+            {"code": "ta", "name": "Tamil"},
+            {"code": "te", "name": "Telugu"},
+            {"code": "ur", "name": "Urdu"},
+        ];
+
+        const sourceLanguageSelect = document.getElementById('sourceLanguage');
+        const targetLanguageSelect = document.getElementById('targetLanguage');
+        const sourceTextarea = document.getElementById('sourceText');
+        const translatedTextarea = document.getElementById('translatedText');
+        const translateButton = document.getElementById('translateButton');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText');
+
+        // Populate language dropdowns
+        function populateLanguageDropdowns() {
+            languages.forEach(lang => {
+                const sourceOption = document.createElement('option');
+                sourceOption.value = lang.code;
+                sourceOption.textContent = lang.name;
+                sourceLanguageSelect.appendChild(sourceOption);
+
+                const targetOption = document.createElement('option');
+                targetOption.value = lang.code;
+                targetOption.textContent = lang.name;
+                targetLanguageSelect.appendChild(targetOption);
+            });
+
+            // Set default languages
+            sourceLanguageSelect.value = 'auto'; // Detect language
+            targetLanguageSelect.value = 'en'; // Translate to English by default
+        }
+
+        // Show a temporary message
+        function showMessage(msg, type = 'warning') {
+            messageText.textContent = msg;
+            messageBox.className = 'message-box show'; // Reset classes
+            if (type === 'error') {
+                messageBox.classList.add('error'); // Add error specific class
+            } else {
+                messageBox.classList.remove('error'); // Ensure error class is removed for warnings
+            }
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, 3000);
+        }
+
+        translateButton.addEventListener('click', async () => {
+            const sourceText = sourceTextarea.value.trim();
+            const sourceLang = sourceLanguageSelect.value;
+            const targetLang = targetLanguageSelect.value;
+
+            if (!sourceText) {
+                showMessage('Please enter text to translate.', 'warning');
+                return;
+            }
+
+            if (sourceLang === 'auto' && targetLang === 'auto') {
+                showMessage('Please select a specific target language when using "Detect Language".', 'warning');
+                return;
+            }
+
+            translatedTextarea.value = ''; // Clear previous translation
+            translateButton.disabled = true;
+            loadingIndicator.classList.remove('hidden');
+
+            try {
+                // The prompt for the Gemini API
+                const prompt = `Translate the following text from ${sourceLang === 'auto' ? 'an detected language' : languages.find(lang => lang.code === sourceLang).name} to ${languages.find(lang => lang.code === targetLang).name}:\n\n"${sourceText}"`;
+
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+
+                // This apiKey will be provided by the Canvas runtime
+                const apiKey = "AIzaSyA4Y0Nwv6sGZx3Fd_RWrgX6Q3jO5TnZCWc"; // **IMPORTANT**: Replace with your actual Gemini API key
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const translatedText = result.candidates[0].content.parts[0].text;
+                    translatedTextarea.value = translatedText;
+                } else {
+                    showMessage('Translation failed: Could not get a valid response from the API. Check console for details.', 'error');
+                    console.error('API response:', result);
+                }
+            } catch (error) {
+                console.error('Error during translation:', error);
+                showMessage('An error occurred during translation. Please try again.', 'error');
+            } finally {
+                translateButton.disabled = false;
+                loadingIndicator.classList.add('hidden');
+            }
+        });
+
+        // Initialize dropdowns on page load
+        populateLanguageDropdowns();
+    </script>
+</body>
+</html>
